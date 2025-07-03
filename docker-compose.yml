@@ -1,0 +1,41 @@
+services:
+  postgres:
+    container_name: postgres_go
+    image: postgres:16.4-alpine
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: 1
+      PGDATA: /data/postgres
+    volumes:
+      - ./postgres-data:/data/postgres
+    ports:
+      - "5432:5432"
+    networks:
+      - refresh-network
+
+  refresh:
+    container_name: app
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
+    depends_on:
+      - migration
+    networks:
+      - refresh-network
+
+  migration:
+    container_name: migrations
+    build:
+      context: .
+      dockerfile: Dockerfile.migrations
+    depends_on:
+      - postgres
+    networks:
+      - refresh-network
+
+networks:
+  refresh-network:
+    driver: bridge
+

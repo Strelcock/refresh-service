@@ -1,0 +1,10 @@
+FROM golang:alpine AS build 
+WORKDIR /app/bin
+ADD . .
+RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build cmd/main.go
+
+FROM scratch 
+WORKDIR /go/bin
+COPY --from=build /app/bin/main .
+COPY --from=build /app/bin/.env .
+ENTRYPOINT [ "./main" ]

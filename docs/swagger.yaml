@@ -1,0 +1,143 @@
+basePath: /
+definitions:
+  auth.AuthResponse:
+    properties:
+      access:
+        type: string
+      refresh:
+        type: string
+    type: object
+  auth.RefreshRequest:
+    properties:
+      old_token:
+        type: string
+    type: object
+  auth.UidResponse:
+    properties:
+      user_id:
+        type: string
+    type: object
+host: localhost:8080
+info:
+  contact: {}
+  description: This is a part of authentification service, that can genrate pairs
+    of tokens
+  title: Refresh token service
+  version: "1.0"
+paths:
+  /tokens:
+    get:
+      description: Returns user's id from access token
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/auth.UidResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            type: string
+      security:
+      - AuthKey: []
+      summary: Get user ID
+      tags:
+      - tokens
+  /tokens/{id}:
+    delete:
+      description: Deletes all user data from DB
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: string
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      security:
+      - AuthKey: []
+      summary: Unauthorize user
+      tags:
+      - tokens
+    get:
+      description: Creates access and refresh tokens
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/auth.AuthResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      summary: Create pair of tokens
+      tags:
+      - tokens
+  /tokens/refresh:
+    post:
+      consumes:
+      - application/json
+      description: |-
+        Refreshes access and refresh tokens. You can only refresh tokens that were returned together, after resfresh old pair is invalid
+        If User-Agent from current request is unlike User-Agent from last request you will be unauthed.
+      parameters:
+      - description: old refresh token
+        in: body
+        name: old_token
+        required: true
+        schema:
+          $ref: '#/definitions/auth.RefreshRequest'
+      - description: User-Agent
+        in: header
+        name: User-Agent
+        type: string
+      - description: User IP-adress
+        in: header
+        name: X-Forwarded-For
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/auth.AuthResponse'
+        "400":
+          description: Bad Request
+          schema:
+            type: string
+        "401":
+          description: Unauthorized
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      security:
+      - AuthKey: []
+      summary: Refresh a pair of tokens
+      tags:
+      - tokens
+securityDefinitions:
+  AuthKey:
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"
